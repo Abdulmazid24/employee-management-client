@@ -1,43 +1,109 @@
 import { createContext, useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
-
 import {
+  GoogleAuthProvider,
   createUserWithEmailAndPassword,
   getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
+  updateProfile,
 } from 'firebase/auth';
+
+// import axios from 'axios';
 import app from '../firebase/firebase.config';
-export const AuthContext = createContext();
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const AuthContext = createContext(null);
 const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
+
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  console.log(user);
-  const createNewUser = (email, password) => {
+  const [loading, setLoading] = useState(true);
+
+  const createUser = (email, password) => {
+    setLoading(true);
     return createUserWithEmailAndPassword(auth, email, password);
   };
+
   const signIn = (email, password) => {
+    setLoading(true);
     return signInWithEmailAndPassword(auth, email, password);
   };
-  const logOut = () => {
+
+  const signInWithGoogle = () => {
+    setLoading(true);
+    return signInWithPopup(auth, googleProvider);
+  };
+
+  const logOut = async () => {
+    setLoading(true);
     return signOut(auth);
   };
+
+  const updateUserProfile = (name, photo) => {
+    return updateProfile(auth.currentUser, {
+      displayName: name,
+      photoURL: photo,
+    });
+  };
+
+  // onAuthStateChange
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, currentUser => {
+      setUser(currentUser);
+      console.log('state captured', currentUser);
+      setLoading(false);
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+  // useEffect(() => {
+  //   const unsubscribe = onAuthStateChanged(auth, async currentUser => {
+  //     console.log('Current User:', currentUser?.email);
+
+  //     // if (currentUser?.email) {
+  //     //   setUser(currentUser);
+
+  //     //   // Get JWT token
+  //     //   try {
+  //     //     await axios.post(
+  //     //       `${import.meta.env.VITE_API_URL}/jwt`,
+  //     //       { email: currentUser?.email },
+  //     //       { withCredentials: true }
+  //     //     );
+  //     //   } catch (error) {
+  //     //     console.error('JWT Token Error:', error);
+  //     //   }
+  //     // } else {
+  //     //   setUser(null);
+  //     //   try {
+  //     //     await axios.get(`${import.meta.env.VITE_API_URL}/logout`, {
+  //     //       withCredentials: true,
+  //     //     });
+  //     //   } catch (error) {
+  //     //     console.error('Logout Error:', error);
+  //     //   }
+  //     // }
+  //     setLoading(false);
+  //   });
+
+  //   return () => unsubscribe();
+  // }, []);
+
   const authInfo = {
     user,
     setUser,
-    createNewUser,
-    logOut,
+    loading,
+    setLoading,
+    createUser,
     signIn,
+    signInWithGoogle,
+    logOut,
+    updateUserProfile,
   };
-  useEffect(() => {
-    const unSubscribe = onAuthStateChanged(auth, currentUser => {
-      setUser(currentUser);
-    });
-    return () => {
-      unSubscribe();
-    };
-  }, []);
 
   return (
     <AuthContext.Provider value={authInfo}>{children}</AuthContext.Provider>
@@ -45,6 +111,3 @@ const AuthProvider = ({ children }) => {
 };
 
 export default AuthProvider;
-AuthProvider.propTypes = {
-  children: PropTypes.node.isRequired,
-};

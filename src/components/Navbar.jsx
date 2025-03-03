@@ -23,6 +23,12 @@ const Navbar = () => {
           <NavLink to="/contact" className="hover:text-yellow-300">
             Contact Us
           </NavLink>
+          <NavLink to="/secret" className="hover:text-yellow-300">
+            Cecret
+          </NavLink>
+          <NavLink to="/dashboard" className="hover:text-yellow-300">
+            Dashboard
+          </NavLink>
 
           {/* Private Route - Dashboard */}
           {user && (
@@ -42,10 +48,10 @@ const Navbar = () => {
               {/* Logout Dropdown */}
               <div
                 id="logout-menu"
-                className="absolute right-0 mt-2 w-32 bg-white text-black rounded-lg shadow-md hidden"
+                className="absolute right-0 mt-2 w-32 bg-white text-black rounded-lg shadow-md "
               >
                 <button
-                  onClick={handleLogout}
+                  onClick={logOut}
                   className="block w-full text-left px-4 py-2 hover:bg-gray-200"
                 >
                   Logout

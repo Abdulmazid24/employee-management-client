@@ -6,6 +6,12 @@ import ErrorPage from '../pages/ErrorPage';
 
 import Contact from '../pages/Contact';
 import Home from '../pages/Home';
+import PrivateRoute from './PrivateRoute';
+import Secret from '../Shared/secret';
+
+import Dashboard from '../layouts/Dashboard';
+import WorkSheet from '../pages/dashboard/EmployeeDashboard/WorkSheet';
+import PaymentHistory from '../pages/dashboard/PaymentHistory/PaymentHistory';
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +34,33 @@ export const router = createBrowserRouter([
       {
         path: '/contact',
         element: <Contact></Contact>,
+      },
+
+      {
+        path: 'secret',
+        element: (
+          <PrivateRoute>
+            <Secret></Secret>
+          </PrivateRoute>
+        ),
+      },
+    ],
+  },
+  {
+    path: 'dashboard',
+    element: (
+      <PrivateRoute>
+        <Dashboard></Dashboard>
+      </PrivateRoute>
+    ),
+    children: [
+      {
+        path: 'work-sheet',
+        element: <WorkSheet></WorkSheet>,
+      },
+      {
+        path: 'payment-history',
+        element: <PaymentHistory></PaymentHistory>,
       },
     ],
   },

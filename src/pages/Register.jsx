@@ -1,92 +1,124 @@
 import { FaGoogle, FaGithub } from 'react-icons/fa';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import {
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from 'firebase/auth';
-
-import { addDoc, collection } from 'firebase/firestore';
-import { useContext, useState } from 'react';
-import { Link } from 'react-router-dom';
-
+import { useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../Providers/AuthProvider';
+import useAxiosPublic from '../hooks/useAxiosPublic';
 
 const Register = () => {
-  const { auth } = useContext(AuthContext);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('Employee');
-  const [bankAccountNo, setBankAccountNo] = useState('');
-  const [salary, setSalary] = useState('');
-  const [designation, setDesignation] = useState('');
-  const [photo, setPhoto] = useState(null);
+  const { createUser, setUser, updateUserProfile } = useContext(AuthContext);
+  const axiosPublic = useAxiosPublic();
+  const navigate = useNavigate();
 
-  const handleRegistration = async e => {
-    e.preventDefault();
-    // Password validation
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters.');
-      return;
-    }
-    if (!/[A-Z]/.test(password)) {
-      toast.error('Password must contain at least one capital letter.');
-      return;
-    }
-    if (!/[!@#$%^&*]/.test(password)) {
-      toast.error('Password must contain at least one special character.');
-      return;
-    }
+  // const handleRegistration = async e => {
+  //   e.preventDefault();
+  //   // Password validation
+  //   if (password.length < 6) {
+  //     toast.error('Password must be at least 6 characters.');
+  //     return;
+  //   }
+  //   if (!/[A-Z]/.test(password)) {
+  //     toast.error('Password must contain at least one capital letter.');
+  //     return;
+  //   }
+  //   if (!/[!@#$%^&*]/.test(password)) {
+  //     toast.error('Password must contain at least one special character.');
+  //     return;
+  //   }
 
+  //   try {
+  //     const userCredential = await createUserWithEmailAndPassword(
+  //       auth,
+  //       email,
+  //       password
+  //     );
+  //     const user = userCredential.user;
+
+  //     // Save user details to Firestore
+  //     await addDoc(collection(db, 'users'), {
+  //       email: user.email,
+  //       role,
+  //       bank_account_no: bankAccountNo,
+  //       salary,
+  //       designation,
+  //       photo: photo ? URL.createObjectURL(photo) : null,
+  //       isVerified: false,
+  //     });
+
+  //     toast.success('Registration successful!');
+  //   } catch (error) {
+  //     toast.error(error.message);
+  //   }
+  // };
+
+  // const handleGoogleLogin = async () => {
+  //   try {
+  //     const provider = new GoogleAuthProvider();
+  //     const userCredential = await signInWithPopup(auth, provider);
+  //     const user = userCredential.user;
+
+  //     // Save user details with default values
+  //     await addDoc(collection(db, 'users'), {
+  //       email: user.email,
+  //       role: 'Employee',
+  //       bank_account_no: '123456789',
+  //       salary: 50000,
+  //       designation: 'Employee',
+  //       photo: user.photoURL,
+  //       isVerified: false,
+  //     });
+
+  //     toast.success('Registration with Google successful!');
+  //   } catch (error) {
+  //     toast.error(error.message);
+  //   }
+  // };
+
+  const handleRegistration = async event => {
+    event.preventDefault();
+    const form = event.target;
+    const name = form.name.value;
+    const email = form.email.value;
+    const password = form.password.value;
+    const role = form.role.value;
+    const bankAccountNo = form.bankAccountNo.value;
+    const designation = form.designation.value;
+    const salary = form.salary.value;
+    const image = form.image.value;
+    // const image = form.image.files[0];
+    // const photoURL = await imageUpload(image);
+    const userInfo = {
+      name,
+      email,
+      password,
+      image,
+      role,
+      bankAccountNo,
+      designation,
+      salary,
+    };
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
+      //2. User Registration
+      const result = await createUser(email, password);
+      console.log(result);
+      setUser(result.user);
+      //3. Save username & profile photo
+      await updateUserProfile(name, image);
+      axiosPublic.post('/users', userInfo).then(res => {
+        if (res.data.insertedId) {
+          console.log('user added in the database');
 
-      // Save user details to Firestore
-      await addDoc(collection(db, 'users'), {
-        email: user.email,
-        role,
-        bank_account_no: bankAccountNo,
-        salary,
-        designation,
-        photo: photo ? URL.createObjectURL(photo) : null,
-        isVerified: false,
+          toast.success('Signup Successful');
+        }
       });
 
-      toast.success('Registration successful!');
-    } catch (error) {
-      toast.error(error.message);
+      navigate('/');
+    } catch (err) {
+      console.log(err);
+      toast.error(err?.message);
     }
   };
-
-  const handleGoogleLogin = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(auth, provider);
-      const user = userCredential.user;
-
-      // Save user details with default values
-      await addDoc(collection(db, 'users'), {
-        email: user.email,
-        role: 'Employee',
-        bank_account_no: '123456789',
-        salary: 50000,
-        designation: 'Employee',
-        photo: user.photoURL,
-        isVerified: false,
-      });
-
-      toast.success('Registration with Google successful!');
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-green-500 to-teal-600">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
@@ -104,8 +136,7 @@ const Register = () => {
             <input
               type="email"
               id="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              name="email"
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="Enter your email"
               required
@@ -121,8 +152,7 @@ const Register = () => {
             <input
               type="password"
               id="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
+              name="password"
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="Enter your password"
               required
@@ -137,8 +167,7 @@ const Register = () => {
             </label>
             <select
               id="role"
-              value={role}
-              onChange={e => setRole(e.target.value)}
+              name="role"
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               required
             >
@@ -156,8 +185,7 @@ const Register = () => {
             <input
               type="text"
               id="bankAccountNo"
-              value={bankAccountNo}
-              onChange={e => setBankAccountNo(e.target.value)}
+              name="bankAccountNo"
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="Enter your bank account number"
               required
@@ -173,8 +201,7 @@ const Register = () => {
             <input
               type="number"
               id="salary"
-              value={salary}
-              onChange={e => setSalary(e.target.value)}
+              name="salary"
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="Enter your salary"
               required
@@ -190,14 +217,28 @@ const Register = () => {
             <input
               type="text"
               id="designation"
-              value={designation}
-              onChange={e => setDesignation(e.target.value)}
+              name="designation"
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="Enter your designation"
               required
             />
           </div>
-          <div className="mb-6">
+          <div className="mb-4">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="designation"
+            >
+              Photo
+            </label>
+            <input
+              type="text"
+              name="image"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="Enter your PhotoURL"
+              required
+            />
+          </div>
+          {/* <div className="mb-6">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
               htmlFor="photo"
@@ -207,12 +248,12 @@ const Register = () => {
             <input
               type="file"
               id="photo"
-              onChange={e => setPhoto(e.target.files[0])}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              name="image"
               accept="image/*"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               required
             />
-          </div>
+          </div> */}
           <button
             type="submit"
             className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition duration-300"
@@ -224,12 +265,15 @@ const Register = () => {
           <p className="text-gray-600">Or register with</p>
           <div className="flex justify-center gap-4 mt-4">
             <button
-              onClick={handleGoogleLogin}
-              className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition duration-300"
+              title="Continue with Google"
+              className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition duration-300 cursor-pointer"
             >
               <FaGoogle size={20} />
             </button>
-            <button className="p-2 bg-gray-800 text-white rounded-full hover:bg-gray-900 transition duration-300">
+            <button
+              title="Continue with Github"
+              className="p-2 bg-gray-800 text-white rounded-full hover:bg-gray-900 transition duration-300 cursor-pointer"
+            >
               <FaGithub size={20} />
             </button>
           </div>
