@@ -5,6 +5,7 @@ import { AuthContext } from '../Providers/AuthProvider';
 import { toast } from 'react-toastify';
 
 import Loading from '../components/Loading';
+import SocialLogin from '../components/SocialLogin';
 
 const Login = () => {
   const { signIn, signInWithGoogle, loading, user } = useContext(AuthContext);
@@ -98,23 +99,7 @@ const Login = () => {
         </form>
 
         {/* Social Login Options */}
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">Or login with</p>
-          <div className="flex justify-center gap-4 mt-4">
-            {/* Google Login */}
-            <button
-              onClick={handleGoogleSignIn}
-              className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition duration-300"
-            >
-              <FaGoogle size={20} />
-            </button>
-            {/* GitHub Login (Placeholder, Not Implemented) */}
-            <button className="p-2 bg-gray-800 text-white rounded-full hover:bg-gray-900 transition duration-300">
-              <FaGithub size={20} />
-            </button>
-          </div>
-        </div>
-
+        <SocialLogin></SocialLogin>
         {/* Sign Up Link */}
         <div className="mt-6 text-center">
           <p className="text-gray-600">

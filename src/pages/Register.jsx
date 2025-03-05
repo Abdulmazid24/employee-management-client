@@ -5,6 +5,7 @@ import { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../Providers/AuthProvider';
 import useAxiosPublic from '../hooks/useAxiosPublic';
+import SocialLogin from '../components/SocialLogin';
 
 const Register = () => {
   const { createUser, setUser, updateUserProfile } = useContext(AuthContext);
@@ -97,6 +98,7 @@ const Register = () => {
       bankAccountNo,
       designation,
       salary,
+      isVerified: false,
     };
     try {
       //2. User Registration
@@ -261,23 +263,8 @@ const Register = () => {
             Register
           </button>
         </form>
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">Or register with</p>
-          <div className="flex justify-center gap-4 mt-4">
-            <button
-              title="Continue with Google"
-              className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition duration-300 cursor-pointer"
-            >
-              <FaGoogle size={20} />
-            </button>
-            <button
-              title="Continue with Github"
-              className="p-2 bg-gray-800 text-white rounded-full hover:bg-gray-900 transition duration-300 cursor-pointer"
-            >
-              <FaGithub size={20} />
-            </button>
-          </div>
-        </div>
+        {/* Social Login Options */}
+        <SocialLogin></SocialLogin>
         <div className="mt-6 text-center">
           <p className="text-gray-600">
             Already have an account? <Link to={'/login'}>Login</Link>
