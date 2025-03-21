@@ -1,12 +1,32 @@
 import { FaGithub } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import useAuth from '../hooks/useAuth';
+import useAxiosPublic from '../hooks/useAxiosPublic';
+import { useNavigate } from 'react-router-dom';
 
 const SocialLogin = () => {
   const { signInWithGoogle } = useAuth();
+  const axiosPublic = useAxiosPublic();
+  const navigate = useNavigate();
+  // Generate Random Values
+  const randomBankAccount = Math.floor(1000000000 + Math.random() * 9000000000); // 10-digit number
+  const randomSalary = Math.floor(20000 + Math.random() * 80000); // Random salary between 20k-100k
   const handleGoogleSignIn = () => {
     signInWithGoogle().then(result => {
       console.log(result.user);
+      const userInfo = {
+        email: result.user?.email,
+        name: result.user?.displayName,
+        role: 'Employee', // Default role for social login
+        bank_account_no: randomBankAccount,
+        salary: randomSalary,
+        designation: 'N/A',
+        photo: result.user.photoURL,
+      };
+      axiosPublic.post('/users', userInfo).then(res => {
+        console.log(res.data);
+        navigate('/');
+      });
     });
   };
   return (

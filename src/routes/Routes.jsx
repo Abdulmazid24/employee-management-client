@@ -9,6 +9,7 @@ import PrivateRoute from './PrivateRoute';
 import Dashboard from '../layouts/Dashboard';
 import WorkSheet from '../pages/dashboard/EmployeeDashboard/WorkSheet';
 import PaymentHistory from '../pages/dashboard/PaymentHistory/PaymentHistory';
+import AllEmployeeList from '../pages/dashboard/AdminDashboard/AllEmployeeList';
 
 export const router = createBrowserRouter([
   {
@@ -49,6 +50,11 @@ export const router = createBrowserRouter([
       {
         path: 'payment-history',
         element: <PaymentHistory></PaymentHistory>,
+      },
+      // Admin Routes only
+      {
+        path: 'all-employee-list',
+        element: <AllEmployeeList></AllEmployeeList>,
       },
     ],
   },

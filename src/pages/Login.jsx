@@ -12,9 +12,9 @@ const Login = () => {
   const location = useLocation();
   const from = location?.state?.from?.pathname || '/';
   if (user) return <Navigate to={from} replace={true} />;
-  if (loading) return <Loading />;
+  // if (loading) return <Loading />;
   if (user) return <Navigate to={from} replace={true} />;
-  if (loading) return <Loading />;
+
   // form submit handler
   const handleSubmit = async event => {
     event.preventDefault();
@@ -33,17 +33,17 @@ const Login = () => {
     }
   };
 
-  // Handle Google Signin
-  const handleGoogleSignIn = async () => {
-    try {
-      //User Registration using google
-      await signInWithGoogle();
-      toast.success('Login Successful');
-    } catch (err) {
-      console.log(err);
-      toast.error(err?.message);
-    }
-  };
+  // // Handle Google Signin
+  // const handleGoogleSignIn = async () => {
+  //   try {
+  //     //User Registration using google
+  //     await signInWithGoogle();
+  //     toast.success('Login Successful');
+  //   } catch (err) {
+  //     console.log(err);
+  //     toast.error(err?.message);
+  //   }
+  // };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-gray-50 to-purple-300">

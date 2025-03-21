@@ -83,9 +83,9 @@ const Register = () => {
     const email = form.email.value;
     const password = form.password.value;
     const role = form.role.value;
-    const bankAccountNo = form.bankAccountNo.value;
+    const bankAccountNo = parseFloat(form.bankAccountNo.value);
     const designation = form.designation.value;
-    const salary = form.salary.value;
+    const salary = parseFloat(form.salary.value);
     const image = form.image.value;
     // const image = form.image.files[0];
     // const photoURL = await imageUpload(image);
@@ -128,6 +128,22 @@ const Register = () => {
           Register
         </h1>
         <form onSubmit={handleRegistration}>
+          <div className="mb-4">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="email"
+            >
+              Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="Enter your name"
+              required
+            />
+          </div>
           <div className="mb-4">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
