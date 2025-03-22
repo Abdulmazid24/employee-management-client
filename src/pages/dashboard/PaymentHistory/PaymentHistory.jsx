@@ -1,138 +1,147 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-const PAGE_SIZE = 5;
+import useAxiosSecure from '../../../hooks/useAxiosSecure';
 
 const PaymentHistory = () => {
-  const [paymentData, setPaymentData] = useState([]);
+  const axiosSecure = useAxiosSecure();
+  const [payments, setPayments] = useState([]);
+  const [filteredPayments, setFilteredPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [yearFilter, setYearFilter] = useState('');
 
-  // Fetch the logged-in employee's payment history data
+  const recordsPerPage = 5;
+
   useEffect(() => {
-    const fetchData = async () => {
-      // Replace with your actual API call or Firestore query
-      const data = await fetchPaymentHistory();
-      // Sort the data so that the earliest month is the first row
-      data.sort((a, b) => new Date(a.date) - new Date(b.date));
-      setPaymentData(data);
-    };
-    fetchData();
+    fetchPaymentHistory();
   }, []);
 
-  // Dummy function to simulate fetching data from the database
   const fetchPaymentHistory = async () => {
-    // Sample data; in real application, fetch from DB
-    return [
-      {
-        id: 1,
-        month: 'January',
-        year: 2025,
-        amount: 2000,
-        transactionId: 'TX123',
-        date: '2025-01-15',
-      },
-      {
-        id: 2,
-        month: 'February',
-        year: 2025,
-        amount: 2100,
-        transactionId: 'TX124',
-        date: '2025-02-15',
-      },
-      {
-        id: 3,
-        month: 'March',
-        year: 2025,
-        amount: 2200,
-        transactionId: 'TX125',
-        date: '2025-03-15',
-      },
-      {
-        id: 4,
-        month: 'April',
-        year: 2025,
-        amount: 2300,
-        transactionId: 'TX126',
-        date: '2025-04-15',
-      },
-      {
-        id: 5,
-        month: 'May',
-        year: 2025,
-        amount: 2400,
-        transactionId: 'TX127',
-        date: '2025-05-15',
-      },
-      {
-        id: 6,
-        month: 'June',
-        year: 2025,
-        amount: 2500,
-        transactionId: 'TX128',
-        date: '2025-06-15',
-      },
-    ];
+    try {
+      const token = localStorage.getItem('token');
+      const { data } = await axiosSecure.get('/payment-history', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPayments(data);
+      setFilteredPayments(data); // Initially, show all records
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching payment history:', error);
+      setLoading(false);
+    }
   };
 
-  // Pagination logic
-  const indexOfLastItem = currentPage * PAGE_SIZE;
-  const indexOfFirstItem = indexOfLastItem - PAGE_SIZE;
-  const currentItems = paymentData.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(paymentData.length / PAGE_SIZE);
+  // Filter function
+  useEffect(() => {
+    let filteredData = payments;
+    if (yearFilter) {
+      filteredData = filteredData.filter(
+        payment => payment.year === yearFilter
+      );
+    }
+    if (searchTerm) {
+      filteredData = filteredData.filter(payment =>
+        payment.transactionId.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    setFilteredPayments(filteredData);
+    setCurrentPage(1); // Reset to first page after filtering
+  }, [searchTerm, yearFilter, payments]);
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
+  const lastIndex = currentPage * recordsPerPage;
+  const firstIndex = lastIndex - recordsPerPage;
+  const currentRecords = filteredPayments.slice(firstIndex, lastIndex);
 
   return (
-    <div className="container mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-4">Payment History</h2>
-      <table className="w-full table-auto border-collapse">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="border p-2">Month</th>
-            <th className="border p-2">Year</th>
-            <th className="border p-2">Amount</th>
-            <th className="border p-2">Transaction Id</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentItems.map(payment => (
-            <tr key={payment.id}>
-              <td className="border p-2">{payment.month}</td>
-              <td className="border p-2">{payment.year}</td>
-              <td className="border p-2">{payment.amount}</td>
-              <td className="border p-2">{payment.transactionId}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Payment History</h1>
 
-      {/* Pagination Controls */}
-      {paymentData.length > PAGE_SIZE && (
-        <div className="flex justify-between mt-4">
-          <button
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-          >
-            Next
-          </button>
+      {/* Search & Filter */}
+      <div className="flex flex-col md:flex-row gap-4 mb-4">
+        <input
+          type="text"
+          placeholder="Search by Transaction ID..."
+          className="border p-2 rounded w-full md:w-1/3"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+        />
+        <select
+          className="border p-2 rounded w-full md:w-1/3"
+          value={yearFilter}
+          onChange={e => setYearFilter(e.target.value)}
+        >
+          <option value="">Filter by Year</option>
+          {[...new Set(payments.map(p => p.year))].map(year => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <p className="text-center text-gray-500">Loading payments...</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="border border-gray-300 p-2">Month</th>
+                <th className="border border-gray-300 p-2">Year</th>
+                <th className="border border-gray-300 p-2">Amount</th>
+                <th className="border border-gray-300 p-2">Transaction ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentRecords.length > 0 ? (
+                currentRecords.map(payment => (
+                  <tr key={payment._id} className="text-center">
+                    <td className="border border-gray-300 p-2">
+                      {payment.month}
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      {payment.year}
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      ${payment.amount}
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      {payment.transactionId}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="text-center p-4 text-gray-500">
+                    No payments found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       )}
+
+      {/* Pagination */}
+      <div className="flex justify-center mt-4">
+        {Array.from({
+          length: Math.ceil(filteredPayments.length / recordsPerPage),
+        }).map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentPage(index + 1)}
+            className={`px-3 py-1 mx-1 rounded ${
+              currentPage === index + 1
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-300'
+            }`}
+          >
+            {index + 1}
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import useAxiosSecure from '../../../hooks/useAxiosSecure';
 import useAuth from '../../../hooks/useAuth';
 import Swal from 'sweetalert2';
+import { toast } from 'react-toastify';
+import useAxiosPublic from '../../../hooks/useAxiosPublic';
 
 const AllEmployeeList = () => {
   const { loading } = useAuth();
@@ -29,6 +31,23 @@ const AllEmployeeList = () => {
         refetch();
       }
     });
+  };
+
+  const fireEmployee = async id => {
+    if (!window.confirm('Are you sure you want to fire this employee?')) return;
+    try {
+      await useAxiosPublic.patch(
+        `/api/employees/${id}/fire`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }
+      );
+      toast.success('Employee fired');
+      fetchEmployees();
+    } catch (error) {
+      toast.error('Failed to fire employee');
+    }
   };
   return (
     <div className="p-6">
@@ -69,7 +88,10 @@ const AllEmployeeList = () => {
                     {employee.fired ? (
                       <span className="text-red-500">Fired</span>
                     ) : (
-                      <button className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
+                      <button
+                        onClick={() => fireEmployee(employee._id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                      >
                         Fire
                       </button>
                     )}
