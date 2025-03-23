@@ -1,7 +1,7 @@
 import { BiSolidContact, BiSolidSpreadsheet } from 'react-icons/bi';
 import { BsReverseListColumnsReverse } from 'react-icons/bs';
 import {
-  FaChartBar,
+  // FaChartBar,
   FaChartPie,
   FaCreditCard,
   FaHome,
@@ -12,6 +12,7 @@ import { TbDetails } from 'react-icons/tb';
 import { NavLink, Outlet } from 'react-router-dom';
 import useAdmin from '../hooks/useAdmin';
 import { FaBarsProgress } from 'react-icons/fa6';
+import { MdPayment } from 'react-icons/md';
 
 const Dashboard = () => {
   // TODO : get isAdmin value from the database
@@ -79,7 +80,7 @@ const Dashboard = () => {
                   Employee List
                 </NavLink>
               </li>
-              <li>
+              {/* <li>
                 <NavLink
                   className="flex items-center gap-2"
                   to={`/employee-details/:slug`}
@@ -87,7 +88,7 @@ const Dashboard = () => {
                   <FaChartBar size={20} />
                   Details
                 </NavLink>
-              </li>
+              </li> */}
               <li>
                 <NavLink
                   className="flex items-center gap-2"

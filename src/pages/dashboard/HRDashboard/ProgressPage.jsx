@@ -1,63 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import useAxiosSecure from '../../../hooks/useAxiosSecure';
+import { useQuery } from '@tanstack/react-query';
 
 const ProgressPage = () => {
-  const [employees, setEmployees] = useState([]); // All employee records
-  const [filteredRecords, setFilteredRecords] = useState([]); // Filtered data
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedEmployee, setSelectedEmployee] = useState(''); // Employee filter
-  const [selectedMonth, setSelectedMonth] = useState(''); // Month filter
+  const [selectedEmployee, setSelectedEmployee] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const axiosSecure = useAxiosSecure();
 
-  useEffect(() => {
-    const fetchWorkRecords = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/progress', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
+  // ✅ Fetch progress data
+  const { data: employees = [], refetch } = useQuery({
+    queryKey: ['progress'],
+    queryFn: async () => {
+      const res = await axiosSecure.get('/progress');
+      return res.data;
+    },
+  });
 
-        const data = await response.json();
-
-        if (Array.isArray(data)) {
-          setEmployees(data);
-          setFilteredRecords(data); // Initially show all records
-        } else {
-          setEmployees([]);
-          setFilteredRecords([]);
-          console.error('Unexpected API response:', data);
-        }
-      } catch (err) {
-        setError('Failed to load data');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWorkRecords();
-  }, []);
-
-  // Handle filtering based on employee and month
-  useEffect(() => {
-    let filtered = employees;
-
-    if (selectedEmployee) {
-      filtered = filtered.filter(record => record.name === selectedEmployee);
-    }
-
-    if (selectedMonth) {
-      filtered = filtered.filter(
-        record =>
-          new Date(record.date).getMonth() + 1 === parseInt(selectedMonth)
-      );
-    }
-
-    setFilteredRecords(filtered);
-  }, [selectedEmployee, selectedMonth, employees]);
-
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+  // ✅ Apply filtering
+  const filteredRecords = employees.filter(record => {
+    return (
+      (!selectedEmployee || record.name === selectedEmployee) &&
+      (!selectedMonth ||
+        new Date(record.selectedDate).getMonth() + 1 ===
+          parseInt(selectedMonth))
+    );
+  });
 
   return (
     <div className="p-6">
@@ -114,7 +81,7 @@ const ProgressPage = () => {
                 <td className="border border-gray-300 p-2">{record.email}</td>
                 <td className="border border-gray-300 p-2">{record.task}</td>
                 <td className="border border-gray-300 p-2">
-                  {new Date(record.date).toLocaleDateString()}
+                  {new Date(record.selectedDate).toLocaleDateString()}
                 </td>
               </tr>
             ))}

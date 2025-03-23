@@ -33,22 +33,22 @@ const AllEmployeeList = () => {
     });
   };
 
-  const fireEmployee = async id => {
-    if (!window.confirm('Are you sure you want to fire this employee?')) return;
-    try {
-      await useAxiosPublic.patch(
-        `/api/employees/${id}/fire`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
-      );
-      toast.success('Employee fired');
-      fetchEmployees();
-    } catch (error) {
-      toast.error('Failed to fire employee');
-    }
-  };
+  // const fireEmployee = async id => {
+  //   if (!window.confirm('Are you sure you want to fire this employee?')) return;
+  //   try {
+  //     await useAxiosPublic.patch(
+  //       `/api/employees/${id}/fire`,
+  //       {},
+  //       {
+  //         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+  //       }
+  //     );
+  //     toast.success('Employee fired');
+  //     fetchEmployees();
+  //   } catch (error) {
+  //     toast.error('Failed to fire employee');
+  //   }
+  // };
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">

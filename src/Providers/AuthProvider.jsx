@@ -75,7 +75,6 @@ const AuthProvider = ({ children }) => {
     };
   }, [axiosPublic]);
 
-  //   const unsubscribe = onAuthStateChanged(auth, async currentUser => {
   //     console.log('Current User:', currentUser?.email);
 
   //     // if (currentUser?.email) {

@@ -1,32 +1,36 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { useQuery } from '@tanstack/react-query';
+import useAxiosSecure from '../../../hooks/useAxiosSecure';
+import Swal from 'sweetalert2';
 
 const EmployeeList = () => {
-  const [employees, setEmployees] = useState([]);
+  const axiosSecure = useAxiosSecure();
 
-  useEffect(() => {
-    fetch('http://localhost:5000/hr/employee-list')
-      .then(res => res.json())
-      .then(data => setEmployees(data))
-      .catch(err => console.error('Error fetching employees:', err));
-  }, []);
+  const { data: employees = [], refetch } = useQuery({
+    queryKey: ['employees'],
+    queryFn: async () => {
+      const res = await axiosSecure.get('/employee-list');
+      console.log(res.data);
+      refetch();
+      // Corrected logging
+      return res.data;
+    },
+  });
 
-  // Toggle Verification Status
-  const handleVerify = (id, isVerified) => {
-    fetch(`http://localhost:5000/hr/verify-employee/${id}`, {
-      method: 'PATCH',
-    })
-      .then(res => res.json())
-      .then(() => {
-        setEmployees(prev =>
-          prev.map(emp =>
-            emp._id === id ? { ...emp, isVerified: !isVerified } : emp
-          )
-        );
-        toast.success('Verification status updated!');
-      })
-      .catch(err => console.error('Error updating verification:', err));
+  const handleVerifyEmployee = id => {
+    axiosSecure.patch(`/hr/verify-employee/${id}`).then(res => {
+      console.log(res.data);
+      if (res.data?.modifiedCount > 0) {
+        Swal.fire({
+          position: 'top-end',
+          icon: 'success',
+          title: 'The employee has been successfully verified by HR',
+          showConfirmButton: false,
+          timer: 1500,
+        });
+        refetch();
+      }
+    });
   };
 
   return (
@@ -56,9 +60,7 @@ const EmployeeList = () => {
                     className={`text-xl ${
                       employee.isVerified ? 'text-green-500' : 'text-red-500'
                     }`}
-                    onClick={() =>
-                      handleVerify(employee._id, employee.isVerified)
-                    }
+                    onClick={() => handleVerifyEmployee(employee._id)}
                   >
                     {employee.isVerified ? '✅' : '❌'}
                   </button>
@@ -79,7 +81,7 @@ const EmployeeList = () => {
                 </td>
                 <td className="p-3">
                   <Link
-                    to={`/details/${employee.email}`}
+                    to={`/dashboard/employee-details/${employee._id}`}
                     className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
                   >
                     Details

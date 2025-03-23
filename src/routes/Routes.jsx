@@ -13,8 +13,8 @@ import AdminRoutes from './AdminRoutes';
 import Payroll from '../pages/dashboard/AdminDashboard/Payroll';
 import ContactUs from '../pages/ContactUs';
 import EmployeeList from '../pages/dashboard/HRDashboard/EmployeeList';
-import EmployeeDetails from '../pages/dashboard/HRDashboard/EmployeeDetails';
 import ProgressPage from '../pages/dashboard/HRDashboard/ProgressPage';
+import EmployeeDetails from '../pages/dashboard/HRDashboard/EmployeeDetails';
 
 export const router = createBrowserRouter([
   {
@@ -75,7 +75,7 @@ export const router = createBrowserRouter([
         element: <EmployeeList></EmployeeList>,
       },
       {
-        path: 'employee-details/:slug',
+        path: 'employee-details/:id',
         element: <EmployeeDetails></EmployeeDetails>,
       },
       {

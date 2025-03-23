@@ -22,6 +22,7 @@ const SocialLogin = () => {
         salary: randomSalary,
         designation: 'N/A',
         photo: result.user.photoURL,
+        isVerified: false,
       };
       axiosPublic.post('/users', userInfo).then(res => {
         console.log(res.data);

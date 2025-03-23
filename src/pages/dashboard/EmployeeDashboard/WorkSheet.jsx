@@ -20,6 +20,7 @@ const WorkSheet = () => {
     const task = form.task.value;
     const hours = form.hours.value;
     const workInfo = {
+      name: user.displayName,
       task,
       hours,
       selectedDate,
