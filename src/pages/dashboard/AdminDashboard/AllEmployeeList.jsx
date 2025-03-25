@@ -2,8 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import useAxiosSecure from '../../../hooks/useAxiosSecure';
 import useAuth from '../../../hooks/useAuth';
 import Swal from 'sweetalert2';
-import { toast } from 'react-toastify';
-import useAxiosPublic from '../../../hooks/useAxiosPublic';
 
 const AllEmployeeList = () => {
   const { loading } = useAuth();

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import useAxiosSecure from '../../../hooks/useAxiosSecure';
@@ -5,29 +6,61 @@ import Swal from 'sweetalert2';
 
 const EmployeeList = () => {
   const axiosSecure = useAxiosSecure();
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [month, setMonth] = useState('');
+  const [year, setYear] = useState('');
 
   const { data: employees = [], refetch } = useQuery({
     queryKey: ['employees'],
     queryFn: async () => {
       const res = await axiosSecure.get('/employee-list');
-      console.log(res.data);
-      refetch();
-      // Corrected logging
       return res.data;
     },
   });
 
   const handleVerifyEmployee = id => {
     axiosSecure.patch(`/hr/verify-employee/${id}`).then(res => {
-      console.log(res.data);
       if (res.data?.modifiedCount > 0) {
+        refetch();
         Swal.fire({
           position: 'top-end',
           icon: 'success',
-          title: 'The employee has been successfully verified by HR',
+          title: 'Employee successfully verified!',
           showConfirmButton: false,
           timer: 1500,
         });
+      }
+    });
+  };
+
+  // Handle Pay button click (open modal)
+  const handlePayClick = employee => {
+    setSelectedEmployee(employee);
+  };
+
+  // Handle Confirm Pay (send payment request)
+  const handleConfirmPay = () => {
+    if (!selectedEmployee || !month || !year) {
+      Swal.fire('Error', 'Please fill all fields.', 'error');
+      return;
+    }
+
+    const paymentData = {
+      employeeId: selectedEmployee._id,
+      name: selectedEmployee.name,
+      email: selectedEmployee.email,
+      salary: selectedEmployee.salary,
+      month,
+      year,
+      status: 'Pending',
+    };
+
+    axiosSecure.post('/payroll', paymentData).then(res => {
+      if (res.data.insertedId) {
+        setSelectedEmployee(null);
+        setMonth('');
+        setYear('');
+        Swal.fire('Success', 'Payment request sent for approval.', 'success');
         refetch();
       }
     });
@@ -75,6 +108,7 @@ const EmployeeList = () => {
                         : 'bg-gray-300 cursor-not-allowed'
                     }`}
                     disabled={!employee.isVerified}
+                    onClick={() => handlePayClick(employee)}
                   >
                     Pay
                   </button>
@@ -92,6 +126,58 @@ const EmployeeList = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Payment Modal */}
+      {selectedEmployee && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-bold mb-4">Pay Employee</h3>
+            <p className="mb-2">
+              <strong>Name:</strong> {selectedEmployee.name}
+            </p>
+            <p className="mb-2">
+              <strong>Salary:</strong> ${selectedEmployee.salary}
+            </p>
+
+            <div className="mb-4">
+              <label className="block">Month</label>
+              <input
+                type="text"
+                placeholder="Enter Month (e.g., January)"
+                className="border p-2 w-full"
+                value={month}
+                onChange={e => setMonth(e.target.value)}
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block">Year</label>
+              <input
+                type="text"
+                placeholder="Enter Year (e.g., 2024)"
+                className="border p-2 w-full"
+                value={year}
+                onChange={e => setYear(e.target.value)}
+              />
+            </div>
+
+            <div className="flex justify-end gap-4">
+              <button
+                className="px-4 py-2 bg-gray-400 text-white rounded"
+                onClick={() => setSelectedEmployee(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                onClick={handleConfirmPay}
+              >
+                Confirm Pay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

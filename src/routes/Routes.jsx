@@ -7,7 +7,6 @@ import Home from '../pages/Home';
 import PrivateRoute from './PrivateRoute';
 import Dashboard from '../layouts/Dashboard';
 import WorkSheet from '../pages/dashboard/EmployeeDashboard/WorkSheet';
-import PaymentHistory from '../pages/dashboard/PaymentHistory/PaymentHistory';
 import AllEmployeeList from '../pages/dashboard/AdminDashboard/AllEmployeeList';
 import AdminRoutes from './AdminRoutes';
 import Payroll from '../pages/dashboard/AdminDashboard/Payroll';
@@ -15,6 +14,7 @@ import ContactUs from '../pages/ContactUs';
 import EmployeeList from '../pages/dashboard/HRDashboard/EmployeeList';
 import ProgressPage from '../pages/dashboard/HRDashboard/ProgressPage';
 import EmployeeDetails from '../pages/dashboard/HRDashboard/EmployeeDetails';
+import PaymentHistory from '../pages/dashboard/EmployeeDashboard/PayemntHistory';
 
 export const router = createBrowserRouter([
   {

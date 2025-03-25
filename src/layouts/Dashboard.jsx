@@ -8,7 +8,6 @@ import {
   FaUsers,
 } from 'react-icons/fa';
 
-import { TbDetails } from 'react-icons/tb';
 import { NavLink, Outlet } from 'react-router-dom';
 import useAdmin from '../hooks/useAdmin';
 import { FaBarsProgress } from 'react-icons/fa6';
@@ -17,7 +16,7 @@ import { MdPayment } from 'react-icons/md';
 const Dashboard = () => {
   // TODO : get isAdmin value from the database
   const [isAdmin] = useAdmin();
-  const isHR = true;
+  const isHR = false;
   return (
     <div className="flex justify-center">
       <div className="w-max min-h-screen bg-amber-950 text-white font-semibold p-4">
@@ -136,15 +135,7 @@ const Dashboard = () => {
                   Payment-History
                 </NavLink>
               </li>
-              <li>
-                <NavLink
-                  className="flex items-center gap-2"
-                  to={'/dashboard/employee-list'}
-                >
-                  <BsReverseListColumnsReverse size={20} />
-                  Employee-List
-                </NavLink>
-              </li>
+              {/* 
               <li>
                 <NavLink
                   className="flex items-center gap-2"
@@ -153,7 +144,7 @@ const Dashboard = () => {
                   <TbDetails size={20} />
                   Details
                 </NavLink>
-              </li>
+              </li> */}
               <hr className="my-3" />
               <li>
                 <NavLink className="flex items-center gap-2" to={'/'}>
@@ -162,7 +153,7 @@ const Dashboard = () => {
                 </NavLink>
               </li>
               <li>
-                <NavLink className="flex items-center gap-2" to={'/contact'}>
+                <NavLink className="flex items-center gap-2" to={'/contactUs'}>
                   <BiSolidContact size={20} />
                   Contact us
                 </NavLink>

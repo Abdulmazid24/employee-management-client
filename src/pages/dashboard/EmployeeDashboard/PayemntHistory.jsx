@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-
 import useAxiosSecure from '../../../hooks/useAxiosSecure';
 
 const PaymentHistory = () => {
@@ -17,14 +16,24 @@ const PaymentHistory = () => {
     fetchPaymentHistory();
   }, []);
 
+  // Fetch payment history
   const fetchPaymentHistory = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const { data } = await axiosSecure.get('/payment-history', {
-        headers: { Authorization: `Bearer ${token}` },
+      const { data } = await axiosSecure.get('/payment-history');
+
+      // Sort by year & month (earliest first)
+      const sortedPayments = [...data].sort((a, b) => {
+        if (a.year === b.year) {
+          return (
+            new Date(`01 ${a.month} ${a.year}`) -
+            new Date(`01 ${b.month} ${b.year}`)
+          );
+        }
+        return a.year - b.year;
       });
-      setPayments(data);
-      setFilteredPayments(data); // Initially, show all records
+
+      setPayments(sortedPayments);
+      setFilteredPayments(sortedPayments); // Initially, show all records
       setLoading(false);
     } catch (error) {
       console.error('Error fetching payment history:', error);
@@ -32,23 +41,27 @@ const PaymentHistory = () => {
     }
   };
 
-  // Filter function
+  // Filter function (by year & search term)
   useEffect(() => {
     let filteredData = payments;
+
     if (yearFilter) {
       filteredData = filteredData.filter(
-        payment => payment.year === yearFilter
+        payment => payment.year.toString() === yearFilter
       );
     }
+
     if (searchTerm) {
       filteredData = filteredData.filter(payment =>
         payment.transactionId.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+
     setFilteredPayments(filteredData);
     setCurrentPage(1); // Reset to first page after filtering
   }, [searchTerm, yearFilter, payments]);
 
+  // Pagination logic
   const lastIndex = currentPage * recordsPerPage;
   const firstIndex = lastIndex - recordsPerPage;
   const currentRecords = filteredPayments.slice(firstIndex, lastIndex);
