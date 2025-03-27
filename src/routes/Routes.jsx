@@ -3,7 +3,6 @@ import MainLayouts from '../layouts/MainLayouts';
 import Register from '../pages/Register';
 import Login from '../pages/Login';
 import ErrorPage from '../pages/ErrorPage';
-import Home from '../pages/Home';
 import PrivateRoute from './PrivateRoute';
 import Dashboard from '../layouts/Dashboard';
 import WorkSheet from '../pages/dashboard/EmployeeDashboard/WorkSheet';
@@ -15,6 +14,9 @@ import EmployeeList from '../pages/dashboard/HRDashboard/EmployeeList';
 import ProgressPage from '../pages/dashboard/HRDashboard/ProgressPage';
 import EmployeeDetails from '../pages/dashboard/HRDashboard/EmployeeDetails';
 import PaymentHistory from '../pages/dashboard/EmployeeDashboard/PayemntHistory';
+import Home from '../pages/Home';
+import FeaturesPage from '../pages/FeaturesPage';
+import DemoRequestPage from '../pages/DemoRequestPage';
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +27,14 @@ export const router = createBrowserRouter([
       {
         path: '/',
         element: <Home></Home>,
+      },
+      {
+        path: '/features',
+        element: <FeaturesPage></FeaturesPage>,
+      },
+      {
+        path: '/demo',
+        element: <DemoRequestPage></DemoRequestPage>,
       },
       {
         path: '/register',

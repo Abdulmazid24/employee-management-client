@@ -3,12 +3,38 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import useAxiosSecure from '../../../hooks/useAxiosSecure';
 import Swal from 'sweetalert2';
+import {
+  Table,
+  Button,
+  Modal,
+  Input,
+  Tag,
+  Card,
+  Avatar,
+  Badge,
+  Select,
+  Space,
+  Typography,
+} from 'antd';
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  DollarOutlined,
+  UserOutlined,
+  InfoCircleOutlined,
+  ArrowLeftOutlined,
+} from '@ant-design/icons';
+
+const { Text, Title } = Typography;
+const { Option } = Select;
 
 const EmployeeList = () => {
   const axiosSecure = useAxiosSecure();
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'card'
 
   const { data: employees = [], refetch } = useQuery({
     queryKey: ['employees'],
@@ -33,12 +59,11 @@ const EmployeeList = () => {
     });
   };
 
-  // Handle Pay button click (open modal)
   const handlePayClick = employee => {
     setSelectedEmployee(employee);
+    setIsModalVisible(true);
   };
 
-  // Handle Confirm Pay (send payment request)
   const handleConfirmPay = () => {
     if (!selectedEmployee || !month || !year) {
       Swal.fire('Error', 'Please fill all fields.', 'error');
@@ -57,7 +82,7 @@ const EmployeeList = () => {
 
     axiosSecure.post('/payroll', paymentData).then(res => {
       if (res.data.insertedId) {
-        setSelectedEmployee(null);
+        setIsModalVisible(false);
         setMonth('');
         setYear('');
         Swal.fire('Success', 'Payment request sent for approval.', 'success');
@@ -66,118 +91,285 @@ const EmployeeList = () => {
     });
   };
 
-  return (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold mb-4">Employee List</h2>
+  const columns = [
+    {
+      title: 'Employee',
+      dataIndex: 'name',
+      key: 'name',
+      render: (text, record) => (
+        <Space>
+          <Avatar src={record.photoURL} icon={<UserOutlined />} />
+          <Text strong>{text}</Text>
+        </Space>
+      ),
+    },
+    {
+      title: 'Email',
+      dataIndex: 'email',
+      key: 'email',
+      responsive: ['md'],
+    },
+    {
+      title: 'Status',
+      dataIndex: 'isVerified',
+      key: 'status',
+      render: (verified, record) => (
+        <Button
+          type="text"
+          icon={
+            verified ? (
+              <CheckCircleOutlined style={{ color: '#52c41a' }} />
+            ) : (
+              <CloseCircleOutlined style={{ color: '#f5222d' }} />
+            )
+          }
+          onClick={() => handleVerifyEmployee(record._id)}
+        />
+      ),
+    },
+    {
+      title: 'Bank Account',
+      dataIndex: 'bankAccount',
+      key: 'bankAccount',
+      render: account => account || 'N/A',
+      responsive: ['lg'],
+    },
+    {
+      title: 'Salary',
+      dataIndex: 'salary',
+      key: 'salary',
+      render: salary => (
+        <Tag color="green" icon={<DollarOutlined />}>
+          {salary}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, record) => (
+        <Space size="middle">
+          <Button
+            type="primary"
+            icon={<DollarOutlined />}
+            disabled={!record.isVerified}
+            onClick={() => handlePayClick(record)}
+          >
+            Pay
+          </Button>
+          <Link to={`/dashboard/employee-details/${record._id}`}>
+            <Button icon={<InfoCircleOutlined />}>Details</Button>
+          </Link>
+        </Space>
+      ),
+    },
+  ];
 
-      <div className="overflow-x-auto">
-        <table className="w-full border border-gray-200 rounded-lg shadow-md">
-          <thead className="bg-gray-100">
-            <tr className="text-left">
-              <th className="p-3 border">Name</th>
-              <th className="p-3 border">Email</th>
-              <th className="p-3 border">Verified</th>
-              <th className="p-3 border">Bank Account</th>
-              <th className="p-3 border">Salary</th>
-              <th className="p-3 border">Pay</th>
-              <th className="p-3 border">Details</th>
-            </tr>
-          </thead>
-          <tbody>
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
+  return (
+    <div className="p-4 md:p-6 lg:p-8">
+      <Card
+        title={
+          <Title level={4} className="!mb-0">
+            Employee Management
+          </Title>
+        }
+        extra={
+          <Button
+            onClick={() => setViewMode(viewMode === 'table' ? 'card' : 'table')}
+            icon={viewMode === 'table' ? <ArrowLeftOutlined /> : null}
+          >
+            {viewMode === 'table' ? 'Card View' : 'Table View'}
+          </Button>
+        }
+        bordered={false}
+        className="shadow-sm"
+      >
+        {viewMode === 'table' ? (
+          <Table
+            columns={columns}
+            dataSource={employees}
+            rowKey="_id"
+            pagination={{ pageSize: 8 }}
+            scroll={{ x: true }}
+            className="border rounded-lg"
+          />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {employees.map(employee => (
-              <tr key={employee._id} className="border">
-                <td className="p-3">{employee.name}</td>
-                <td className="p-3">{employee.email}</td>
-                <td className="p-3 flex justify-center">
-                  <button
-                    className={`text-xl ${
-                      employee.isVerified ? 'text-green-500' : 'text-red-500'
-                    }`}
-                    onClick={() => handleVerifyEmployee(employee._id)}
-                  >
-                    {employee.isVerified ? '✅' : '❌'}
-                  </button>
-                </td>
-                <td className="p-3">{employee.bankAccount || 'N/A'}</td>
-                <td className="p-3">${employee.salary}</td>
-                <td className="p-3">
-                  <button
-                    className={`px-4 py-2 text-white rounded ${
-                      employee.isVerified
-                        ? 'bg-blue-500 hover:bg-blue-600'
-                        : 'bg-gray-300 cursor-not-allowed'
-                    }`}
+              <Card
+                key={employee._id}
+                hoverable
+                className="border rounded-lg"
+                actions={[
+                  <Button
+                    type="primary"
+                    icon={<DollarOutlined />}
                     disabled={!employee.isVerified}
                     onClick={() => handlePayClick(employee)}
+                    block
                   >
-                    Pay
-                  </button>
-                </td>
-                <td className="p-3">
+                    Pay Salary
+                  </Button>,
                   <Link
                     to={`/dashboard/employee-details/${employee._id}`}
-                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                    className="w-full"
                   >
-                    Details
-                  </Link>
-                </td>
-              </tr>
+                    <Button icon={<InfoCircleOutlined />} block>
+                      View Details
+                    </Button>
+                  </Link>,
+                ]}
+              >
+                <Card.Meta
+                  avatar={
+                    <Avatar
+                      src={employee.photoURL}
+                      size={64}
+                      icon={<UserOutlined />}
+                    />
+                  }
+                  title={<Text strong>{employee.name}</Text>}
+                  description={
+                    <>
+                      <Text type="secondary" className="block">
+                        {employee.email}
+                      </Text>
+                      <div className="mt-2">
+                        <Badge
+                          status={employee.isVerified ? 'success' : 'error'}
+                          text={
+                            employee.isVerified ? 'Verified' : 'Not Verified'
+                          }
+                        />
+                      </div>
+                      <div className="mt-2">
+                        <Tag color="green" icon={<DollarOutlined />}>
+                          Salary: ${employee.salary}
+                        </Tag>
+                      </div>
+                      {employee.bankAccount && (
+                        <div className="mt-2">
+                          <Text type="secondary">
+                            Bank: {employee.bankAccount}
+                          </Text>
+                        </div>
+                      )}
+                    </>
+                  }
+                />
+              </Card>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </div>
+        )}
+      </Card>
 
       {/* Payment Modal */}
-      {selectedEmployee && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h3 className="text-xl font-bold mb-4">Pay Employee</h3>
-            <p className="mb-2">
-              <strong>Name:</strong> {selectedEmployee.name}
-            </p>
-            <p className="mb-2">
-              <strong>Salary:</strong> ${selectedEmployee.salary}
-            </p>
-
-            <div className="mb-4">
-              <label className="block">Month</label>
-              <input
-                type="text"
-                placeholder="Enter Month (e.g., January)"
-                className="border p-2 w-full"
-                value={month}
-                onChange={e => setMonth(e.target.value)}
-              />
+      <Modal
+        title={
+          <Title level={4} className="!mb-0">
+            Process Payment
+          </Title>
+        }
+        visible={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        footer={[
+          <Button key="back" onClick={() => setIsModalVisible(false)}>
+            Cancel
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            onClick={handleConfirmPay}
+            disabled={!month || !year}
+          >
+            Confirm Payment
+          </Button>,
+        ]}
+      >
+        {selectedEmployee && (
+          <>
+            <div className="mb-6">
+              <div className="flex items-center gap-4 mb-4">
+                <Avatar
+                  size={48}
+                  src={selectedEmployee.photoURL}
+                  icon={<UserOutlined />}
+                />
+                <div>
+                  <Text strong className="block">
+                    {selectedEmployee.name}
+                  </Text>
+                  <Text type="secondary">{selectedEmployee.email}</Text>
+                </div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <Text strong className="block">
+                  Salary Amount
+                </Text>
+                <Title level={3} className="!mt-1 !mb-0">
+                  ${selectedEmployee.salary}
+                </Title>
+              </div>
             </div>
 
-            <div className="mb-4">
-              <label className="block">Year</label>
-              <input
-                type="text"
-                placeholder="Enter Year (e.g., 2024)"
-                className="border p-2 w-full"
-                value={year}
-                onChange={e => setYear(e.target.value)}
-              />
-            </div>
+            <div className="space-y-4">
+              <div>
+                <Text strong className="block mb-2">
+                  Month
+                </Text>
+                <Select
+                  placeholder="Select month"
+                  style={{ width: '100%' }}
+                  value={month}
+                  onChange={setMonth}
+                >
+                  {months.map(m => (
+                    <Option key={m} value={m}>
+                      {m}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
 
-            <div className="flex justify-end gap-4">
-              <button
-                className="px-4 py-2 bg-gray-400 text-white rounded"
-                onClick={() => setSelectedEmployee(null)}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                onClick={handleConfirmPay}
-              >
-                Confirm Pay
-              </button>
+              <div>
+                <Text strong className="block mb-2">
+                  Year
+                </Text>
+                <Select
+                  placeholder="Select year"
+                  style={{ width: '100%' }}
+                  value={year}
+                  onChange={setYear}
+                >
+                  {years.map(y => (
+                    <Option key={y} value={y}>
+                      {y}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </div>
   );
 };

@@ -1,159 +1,168 @@
 import { useEffect, useState } from 'react';
 import useAxiosSecure from '../../../hooks/useAxiosSecure';
+import { toast } from 'react-hot-toast';
+import { Table, Select, Input, Pagination, Spin } from 'antd';
+import {
+  DollarOutlined,
+  CalendarOutlined,
+  SearchOutlined,
+} from '@ant-design/icons';
+
+const { Option } = Select;
 
 const PaymentHistory = () => {
   const axiosSecure = useAxiosSecure();
   const [payments, setPayments] = useState([]);
-  const [filteredPayments, setFilteredPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPayments, setTotalPayments] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [yearFilter, setYearFilter] = useState('');
+  const [availableYears, setAvailableYears] = useState([]);
 
-  const recordsPerPage = 5;
+  const pageSize = 5;
 
   useEffect(() => {
     fetchPaymentHistory();
-  }, []);
+  }, [currentPage, yearFilter, searchTerm]);
 
-  // Fetch payment history
+  // Fetch Payment History
   const fetchPaymentHistory = async () => {
+    setLoading(true);
     try {
-      const { data } = await axiosSecure.get('/payment-history');
+      const { data } = await axiosSecure.get(
+        `/payment-history?page=${currentPage}&limit=${pageSize}&year=${yearFilter}&search=${searchTerm}`
+      );
 
-      // Sort by year & month (earliest first)
-      const sortedPayments = [...data].sort((a, b) => {
-        if (a.year === b.year) {
-          return (
-            new Date(`01 ${a.month} ${a.year}`) -
-            new Date(`01 ${b.month} ${b.year}`)
-          );
-        }
-        return a.year - b.year;
-      });
+      setPayments(data.data);
+      setTotalPayments(data.totalPayments || 0);
 
-      setPayments(sortedPayments);
-      setFilteredPayments(sortedPayments); // Initially, show all records
-      setLoading(false);
+      // Extract unique years for filter dropdown
+      if (data.data && data.data.length > 0) {
+        const years = [...new Set(data.data.map(p => p.year))].sort(
+          (a, b) => b - a
+        );
+        setAvailableYears(years);
+      }
     } catch (error) {
       console.error('Error fetching payment history:', error);
+      toast.error('Failed to load payment history');
+    } finally {
       setLoading(false);
     }
   };
 
-  // Filter function (by year & search term)
-  useEffect(() => {
-    let filteredData = payments;
-
-    if (yearFilter) {
-      filteredData = filteredData.filter(
-        payment => payment.year.toString() === yearFilter
-      );
-    }
-
-    if (searchTerm) {
-      filteredData = filteredData.filter(payment =>
-        payment.transactionId.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    setFilteredPayments(filteredData);
-    setCurrentPage(1); // Reset to first page after filtering
-  }, [searchTerm, yearFilter, payments]);
-
-  // Pagination logic
-  const lastIndex = currentPage * recordsPerPage;
-  const firstIndex = lastIndex - recordsPerPage;
-  const currentRecords = filteredPayments.slice(firstIndex, lastIndex);
+  // Table columns configuration
+  const columns = [
+    {
+      title: 'Month',
+      dataIndex: 'month',
+      key: 'month',
+      render: month => (
+        <span className="font-medium">
+          {new Date(0, month - 1).toLocaleString('default', { month: 'long' })}
+        </span>
+      ),
+      sorter: (a, b) => a.month - b.month,
+    },
+    {
+      title: 'Year',
+      dataIndex: 'year',
+      key: 'year',
+      sorter: (a, b) => a.year - b.year,
+    },
+    {
+      title: 'Amount',
+      dataIndex: 'salary',
+      key: 'salary',
+      render: amount => (
+        <span className="text-green-600 font-semibold">
+          <DollarOutlined /> {amount.toFixed(2)}
+        </span>
+      ),
+      sorter: (a, b) => a.salary - b.salary,
+    },
+    {
+      title: 'Transaction ID',
+      dataIndex: 'transactionId',
+      key: 'transactionId',
+      render: id => <span className="font-mono text-blue-600">{id}</span>,
+    },
+  ];
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Payment History</h1>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md p-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4 md:mb-0">
+            Payment History
+          </h1>
 
-      {/* Search & Filter */}
-      <div className="flex flex-col md:flex-row gap-4 mb-4">
-        <input
-          type="text"
-          placeholder="Search by Transaction ID..."
-          className="border p-2 rounded w-full md:w-1/3"
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-        />
-        <select
-          className="border p-2 rounded w-full md:w-1/3"
-          value={yearFilter}
-          onChange={e => setYearFilter(e.target.value)}
-        >
-          <option value="">Filter by Year</option>
-          {[...new Set(payments.map(p => p.year))].map(year => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
-      </div>
+          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+            <Input
+              placeholder="Search by Transaction ID..."
+              prefix={<SearchOutlined />}
+              className="w-full md:w-64"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              allowClear
+            />
 
-      {/* Table */}
-      {loading ? (
-        <p className="text-center text-gray-500">Loading payments...</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border border-gray-300 p-2">Month</th>
-                <th className="border border-gray-300 p-2">Year</th>
-                <th className="border border-gray-300 p-2">Amount</th>
-                <th className="border border-gray-300 p-2">Transaction ID</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentRecords.length > 0 ? (
-                currentRecords.map(payment => (
-                  <tr key={payment._id} className="text-center">
-                    <td className="border border-gray-300 p-2">
-                      {payment.month}
-                    </td>
-                    <td className="border border-gray-300 p-2">
-                      {payment.year}
-                    </td>
-                    <td className="border border-gray-300 p-2">
-                      ${payment.amount}
-                    </td>
-                    <td className="border border-gray-300 p-2">
-                      {payment.transactionId}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="4" className="text-center p-4 text-gray-500">
-                    No payments found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+            <Select
+              placeholder="Filter by Year"
+              className="w-full md:w-40"
+              value={yearFilter || undefined}
+              onChange={value => setYearFilter(value)}
+              allowClear
+            >
+              <Option value="">All Years</Option>
+              {availableYears.map(year => (
+                <Option key={year} value={year}>
+                  {year}
+                </Option>
+              ))}
+            </Select>
+          </div>
         </div>
-      )}
 
-      {/* Pagination */}
-      <div className="flex justify-center mt-4">
-        {Array.from({
-          length: Math.ceil(filteredPayments.length / recordsPerPage),
-        }).map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentPage(index + 1)}
-            className={`px-3 py-1 mx-1 rounded ${
-              currentPage === index + 1
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-300'
-            }`}
-          >
-            {index + 1}
-          </button>
-        ))}
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <Spin size="large" />
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <Table
+                columns={columns}
+                dataSource={payments}
+                rowKey="_id"
+                pagination={false}
+                className="border rounded-lg"
+                locale={{
+                  emptyText: (
+                    <div className="text-center py-8">
+                      <CalendarOutlined className="text-4xl text-gray-400 mb-2" />
+                      <p className="text-gray-500">No payment records found</p>
+                    </div>
+                  ),
+                }}
+              />
+            </div>
+
+            {totalPayments > pageSize && (
+              <div className="mt-6 flex justify-center">
+                <Pagination
+                  current={currentPage}
+                  total={totalPayments}
+                  pageSize={pageSize}
+                  onChange={page => setCurrentPage(page)}
+                  showSizeChanger={false}
+                  className="ant-pagination-item-active:bg-blue-500 ant-pagination-item-active:border-blue-500"
+                />
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
